@@ -38,16 +38,57 @@ void Map::shiftLeft(){
    for(int row = 0; row < this->height; row++){
       this->shiftLeftInternal(row);
    }
-
+   this->resetAddedTileFlag();//naechste Runde = wieder addierbar
    this->placeAtRandom(); //wenn move cool dann mach mir nen neues ding
 }
 
 bool Map::shiftLeftInternal(int row){
-   std::vector<Tile*> vRow;
-   vRow = this->vMap[row];
 
-   for()
+   for(int w = 0; w < this->width; w++){
+      Tile* thisTile = this->getTile(w, row);
+      if(thisTile->validL == false){
+         continue;
+      }else{
+         Tile* leftTile = this->getTile(w -1, row);
+         if(leftTile->number == 0){//nicht null, dann swappen
+            this->shiftLeftFromPositon(row, w);
+         }else{
+            if(leftTile->alreadyAdded == false){
+               this->addToLeft(row, w);
+            }
+         }
+      }
+      this->calculateValidMoves(); //recalculate
+   }
+   this->calculateValidMoves(); //recalculate
+   int numMovesLeft = 0;
+   for(int w = 0; w < this->width; w++){
+      if(this->vMap[row][w]->validL){
+         numMovesLeft ++;
+      }
+   }
+   if(numMovesLeft != 0){//again and again
+      this->shiftLeftInternal(row);
+   }
    
+}
+
+void Map::shiftLeftFromPositon(int h, int w){
+   std::vector<Tile*> row = this->vMap[h];
+   for (int i = w; w < this->width; w++){
+      Tile* tempTile = this->vMap[h][w -1];
+      this->vMap[h][w -1] = this->vMap[h][w];
+      this->vMap[h][w] = tempTile; 
+   }
+}
+
+void Map::addToLeft(int h, int w){
+   Tile* currentTile = this->vMap[h][w];
+   Tile* leftTile = this->vMap[h][w -1];
+   leftTile->number = leftTile->number + currentTile->number;
+   leftTile->alreadyAdded = true;
+   currentTile->number = 0; 
+   this->shiftLeftFromPositon(h, w+1);//Jetzt das ding an das Ende schieben
 }
 
 
@@ -70,10 +111,25 @@ void Map::placeAtRandom(){
       int rand = distr(eng);//neue nummer mit engine
       bool isFree = this->isFree(rand);
 
+      std::uniform_int_distribution<> distF(0,2);//wieviele Nummer zum verteilen der zweien und vieren (0,1) = 50%
+      int randNumber = distF(eng);
       if(isFree == 1){
          Tile* tile = this->getTile(rand);
-         tile->number = tile->number + 2;
+         if(randNumber > 0){ //mehr Nummern, mehr zweien und weniger vieren
+            tile->number = tile->number + 2;
+         }else{
+            tile->number = tile->number + 4;
+         }
+         
          placed = true;
+      }
+   }
+}
+
+void Map::resetAddedTileFlag(){
+   for(int h = 0; h < this->height; h++){
+      for(int w = 0; w < this->width; w++){
+         this->vMap[h][w]->alreadyAdded = false;
       }
    }
 }
@@ -98,7 +154,7 @@ bool Map::calculateValidMoves(){
          }else{
             Tile* nextTileUp = this->getTile(w, h -1);//Tile ueber dem aktuellen
             if(nextTileUp->number == 0 || currentTile->number == nextTileUp->number){
-               currentTile->validU = true;
+               currentTile->validU = true;//TODO ALREADY ADDED
             }else{
                currentTile->validU = false;
             }
@@ -108,8 +164,12 @@ bool Map::calculateValidMoves(){
             currentTile->validL = false;
          }else{
             Tile* nextTileLeft = this->getTile(w -1, h);//Tile links dem aktuellen
-            if(nextTileLeft->number == 0 || currentTile->number == nextTileLeft->number){
-               currentTile->validL = true;
+            if((nextTileLeft->number == 0 && currentTile->number != 0) || (currentTile->number == nextTileLeft->number && currentTile->number != 0)){
+               if(nextTileLeft->alreadyAdded){
+                  currentTile->validL = false;
+               }else{
+                  currentTile->validL = true;
+               }
             }else{
                currentTile->validL = false;
             }
@@ -120,7 +180,7 @@ bool Map::calculateValidMoves(){
          }else{
             Tile* nextTileDown = this->getTile(w, h +1);//Tile unter dem aktuellen
             if(nextTileDown->number == 0 || currentTile->number == nextTileDown->number){
-               currentTile->validD = true;
+               currentTile->validD = true;//TODO ALREADY ADDED
             }else{
                currentTile->validD = false;
             }
@@ -131,7 +191,7 @@ bool Map::calculateValidMoves(){
          }else{
             Tile* nextTileRight = this->getTile(w +1, h);//Tile rechts dem aktuellen
             if(nextTileRight->number == 0 || currentTile->number == nextTileRight->number){
-               currentTile->validR = true;
+               currentTile->validR = true;//TODO ALREADY ADDED
             }else{
                currentTile->validR = false;
             }

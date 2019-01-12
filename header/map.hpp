@@ -15,6 +15,8 @@ class Map{
 
       bool isFree(int rand);
       bool shiftLeftInternal(int row);
+
+      void resetAddedTileFlag();
    protected:
 
    public:
@@ -31,8 +33,8 @@ class Map{
       void shiftLeft();
       void shiftRight();
       void shiftDown();
-      std::vector<std::vector<Tile*> > filterZeros();
-
+      void shiftLeftFromPositon(int h, int w);
+      void addToLeft(int h, int w);
       void placeAtRandom();
 
       Tile* getTile(int tileNumber);

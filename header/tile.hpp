@@ -11,6 +11,7 @@ class Tile{
       bool validR;
       bool validU;
       bool validD;
+      bool alreadyAdded = false;
 };
 
 #endif
