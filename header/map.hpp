@@ -36,6 +36,7 @@ class Map{
       void shiftLeftFromPositon(int h, int w);
       void addToLeft(int h, int w);
       void placeAtRandom();
+      void shiftZeroLeft(int row);
 
       Tile* getTile(int tileNumber);
       Tile* getTile(int width, int height);

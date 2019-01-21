@@ -35,24 +35,34 @@ void Map::shiftUp(){\
 }
 
 void Map::shiftLeft(){
-   for(int row = 0; row < this->height; row++){
-      this->shiftLeftInternal(row);
+   int moves = 0;
+   for(int h = 0; h < this->height; h++){
+      for(int w = 0; w < this->width; w++){
+         if(this->vMap[h][w]->validL){
+            moves ++;
+         }
+      }
    }
-   this->resetAddedTileFlag();//naechste Runde = wieder addierbar
-   this->placeAtRandom(); //wenn move cool dann mach mir nen neues ding
+
+   if(moves > 0){
+      for(int row = 0; row < this->height; row++){
+         this->shiftLeftInternal(row);
+      }
+      this->resetAddedTileFlag();//naechste Runde = wieder addierbar
+      this->placeAtRandom(); //wenn move cool dann mach mir nen neues ding
+   }
 }
 
 bool Map::shiftLeftInternal(int row){
-
+   this->shiftZeroLeft(row); //alles nach Links ballern
+   this->calculateValidMoves(); //neu die moeglichkeiten berechnen
    for(int w = 0; w < this->width; w++){
       Tile* thisTile = this->getTile(w, row);
       if(thisTile->validL == false){
          continue;
       }else{
          Tile* leftTile = this->getTile(w -1, row);
-         if(leftTile->number == 0){//nicht null, dann swappen
-            this->shiftLeftFromPositon(row, w);
-         }else{
+         if(leftTile->number != 0){//nicht null, dann swappen
             if(leftTile->alreadyAdded == false){
                this->addToLeft(row, w);
             }
@@ -60,26 +70,49 @@ bool Map::shiftLeftInternal(int row){
       }
       this->calculateValidMoves(); //recalculate
    }
-   this->calculateValidMoves(); //recalculate
-   int numMovesLeft = 0;
-   for(int w = 0; w < this->width; w++){
-      if(this->vMap[row][w]->validL){
-         numMovesLeft ++;
+   this->shiftZeroLeft(row);
+}
+
+void Map::shiftZeroLeft(int row){
+   int numZeroTotal = 0;
+   int numZeroLeft = 0;
+   for (int w = 0; w < this->width; w++){
+      if (this->vMap[row][w]->number == 0){
+         numZeroTotal++;
       }
    }
-   if(numMovesLeft != 0){//again and again
-      this->shiftLeftInternal(row);
+
+   if(numZeroTotal == this->width){
+      return;
    }
-   
+
+   if(numZeroTotal != 0){
+      for (int w = 0; w < this->width - numZeroTotal; w++){//alle Nullen die Links noch sind 
+         if (this->vMap[row][w]->number == 0){
+            this->shiftLeftFromPositon(row, w +1);
+         }
+      }
+
+      for (int w = 0; w < this->width - numZeroTotal; w++){//alle Nullen die Links noch sind 
+         if (this->vMap[row][w]->number == 0){
+            numZeroLeft ++;
+         }
+      }
+   }
+
+   if(numZeroLeft != 0){
+      this->shiftZeroLeft(row);
+   }
+
 }
 
 void Map::shiftLeftFromPositon(int h, int w){
-   std::vector<Tile*> row = this->vMap[h];
    for (int i = w; w < this->width; w++){
       Tile* tempTile = this->vMap[h][w -1];
       this->vMap[h][w -1] = this->vMap[h][w];
       this->vMap[h][w] = tempTile; 
    }
+   
 }
 
 void Map::addToLeft(int h, int w){
@@ -164,11 +197,15 @@ bool Map::calculateValidMoves(){
             currentTile->validL = false;
          }else{
             Tile* nextTileLeft = this->getTile(w -1, h);//Tile links dem aktuellen
-            if((nextTileLeft->number == 0 && currentTile->number != 0) || (currentTile->number == nextTileLeft->number && currentTile->number != 0)){
-               if(nextTileLeft->alreadyAdded){
-                  currentTile->validL = false;
+            if(currentTile->number != 0){
+               if(nextTileLeft->number == 0 || currentTile->number == nextTileLeft->number){
+                  if(currentTile->alreadyAdded){
+                     currentTile->validL = false;
+                  }else{
+                     currentTile->validL = true;
+                  }
                }else{
-                  currentTile->validL = true;
+                  currentTile->validL = false;
                }
             }else{
                currentTile->validL = false;
