@@ -15,6 +15,8 @@ class Map{
 
       bool isFree(int rand);
       bool shiftLeftInternal(int row);
+      bool shiftRightInternal(int row);
+      bool shiftUpInternal(int collumn);
 
       void resetAddedTileFlag();
    protected:
@@ -34,9 +36,15 @@ class Map{
       void shiftRight();
       void shiftDown();
       void shiftLeftFromPositon(int h, int w);
+      void shiftRightFromPositon(int h, int w);
+
       void addToLeft(int h, int w);
+      void addToRight(int h, int w);
+
       void placeAtRandom();
+
       void shiftZeroLeft(int row);
+      void shiftZeroRight(int row);
 
       Tile* getTile(int tileNumber);
       Tile* getTile(int width, int height);

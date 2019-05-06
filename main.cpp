@@ -5,7 +5,9 @@
 
 int main(int argc, char const *argv[])
 {
+   int a = 0;
    Map* playMap = new Map(10,10);
+   std::cin >> a;
    playMap->init();//wir muessen irgendwo starten
 
    initscr();//Initialisisre ncurses
